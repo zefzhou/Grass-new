@@ -15,14 +15,11 @@ import pyfiglet
 from websockets_proxy import Proxy, proxy_connect
 
 logger.remove()
-logger.add(
-    sink=lambda msg: print(msg, end=''),
-    format=(
-        "<green>{time:DD/MM/YY HH:mm:ss}</green> | "
-        "<level>{level:8} | {message}</level>"
-    ),
-    colorize=True
-)
+logger.add(sink=lambda msg: print(msg, end=''),
+           format=("<green>{time:DD/MM/YY HH:mm:ss}</green> | "
+                   "<level>{level:8} | {message}</level>"),
+           colorize=True)
+
 
 # main.py
 def print_header():
@@ -37,8 +34,10 @@ def print_header():
     print("{我的gihub：github.com/Gzgod")
     print("{我的推特：推特雪糕战神@Hy78516012")
 
+
 # 初始化头部信息
-print_header()
+# print_header()
+
 
 # 使用的代理数量 /uid
 def get_proxy_count():
@@ -51,6 +50,7 @@ def get_proxy_count():
                 print("请输入一个大于零的数字。")
         except ValueError:
             print("请输入有效的数字。")
+
 
 ONETIME_PROXY = get_proxy_count()
 DELAY_INTERVAL = 0.5
@@ -84,6 +84,7 @@ HTTP_STATUS_CODES = {
     504: "Gateway Timeout"
 }
 
+
 # 读取UID和代理数量
 def read_uid_and_proxy():
     with open(FILE_UID, 'r') as file:
@@ -94,6 +95,7 @@ def read_uid_and_proxy():
 
     return uid_count, proxy_count
 
+
 uid_count, proxy_count = read_uid_and_proxy()
 
 print()
@@ -101,6 +103,7 @@ print(f"UID: {uid_count}. 来自 {FILE_UID}。")
 print(f"加载了 {proxy_count} 个代理。来自 {FILE_PROXY}。")
 print(f"每个任务激活的代理数量: {ONETIME_PROXY} 个代理。")
 print()
+
 
 # 获取用户输入以处理代理失败
 def get_user_input():
@@ -111,14 +114,17 @@ def get_user_input():
             print("无效输入。请输入 'yes' 或 'no'。")
     return user_input == 'yes'
 
+
 remove_on_all_errors = get_user_input()
 print(f"您选择了: {'是' if remove_on_all_errors else '否'}, ！\n")
 
 # 默认使用 'extension' 节点类型
 node_type = "extension"
 
+
 def truncate_userid(user_id):
     return f"{user_id[:3]}--{user_id[-3:]}"
+
 
 def truncate_proxy(proxy):
     pattern = r'([a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})|(?:\d{1,3}\.){3}\d{1,3})'
@@ -126,6 +132,7 @@ def truncate_proxy(proxy):
     if match:
         return match.group(0)
     return '未定义'
+
 
 def count_proxies(FILE_PROXY):
     try:
@@ -136,10 +143,13 @@ def count_proxies(FILE_PROXY):
         logger.error(f"文件 {FILE_PROXY} 未找到！")
         return 0
 
+
 async def connect_to_wss(protocol_proxy, user_id):
     device_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, protocol_proxy))
     random_user_agent = random.choice(USERAGENTS)
-    logger.info(f"UID: {truncate_userid(user_id)} | {node_type} | 生成设备ID: {device_id} | 代理: {truncate_proxy(protocol_proxy)}")
+    logger.info(
+        f"UID: {truncate_userid(user_id)} | {node_type} | 生成设备ID: {device_id} | 代理: {truncate_proxy(protocol_proxy)}"
+    )
 
     has_received_action = False
     is_authenticated = False
@@ -158,7 +168,7 @@ async def connect_to_wss(protocol_proxy, user_id):
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
             urilist = [
-                "wss://proxy2.wynd.network:4444", 
+                "wss://proxy2.wynd.network:4444",
                 "wss://proxy2.wynd.network:4650"
             ]
             uri = random.choice(urilist)
@@ -166,13 +176,14 @@ async def connect_to_wss(protocol_proxy, user_id):
             proxy = Proxy.from_url(protocol_proxy)
 
             async with proxy_connect(
-                uri,
-                proxy=proxy,
-                ssl=ssl_context,
-                server_hostname=server_hostname,
-                extra_headers=custom_headers
-            ) as websocket:
-                logger.success(f"UID: {truncate_userid(user_id)} | {node_type} | 成功连接到WS | uri: {uri} | 头部信息: {custom_headers} | 设备ID: {device_id} | 代理: {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}")
+                    uri,
+                    proxy=proxy,
+                    ssl=ssl_context,
+                    server_hostname=server_hostname,
+                    extra_headers=custom_headers) as websocket:
+                logger.success(
+                    f"UID: {truncate_userid(user_id)} | {node_type} | 成功连接到WS | uri: {uri} | 头部信息: {custom_headers} | 设备ID: {device_id} | 代理: {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}"
+                )
 
                 async def send_ping():
                     while True:
@@ -183,13 +194,19 @@ async def connect_to_wss(protocol_proxy, user_id):
                                 "action": "PING",
                                 "data": {}
                             })
-                            logger.debug(f"UID: {truncate_userid(user_id)} | {node_type} | 发送PING消息 | 数据: {send_message}")
+                            logger.debug(
+                                f"UID: {truncate_userid(user_id)} | {node_type} | 发送PING消息 | 数据: {send_message}"
+                            )
                             await asyncio.sleep(DELAY_INTERVAL)
                             await websocket.send(send_message)
-                            logger.info(f"UID: {truncate_userid(user_id)} | {node_type} | 已发送PING | 数据: {send_message}")
+                            logger.info(
+                                f"UID: {truncate_userid(user_id)} | {node_type} | 已发送PING | 数据: {send_message}"
+                            )
 
                         rand_sleep = random.uniform(10, 30)
-                        logger.info(f"UID: {truncate_userid(user_id)} | {node_type} | 下次PING在 {rand_sleep:.2f} 秒后，！")
+                        logger.info(
+                            f"UID: {truncate_userid(user_id)} | {node_type} | 下次PING在 {rand_sleep:.2f} 秒后，！"
+                        )
                         await asyncio.sleep(rand_sleep)
 
                 await asyncio.sleep(DELAY_INTERVAL)
@@ -198,48 +215,70 @@ async def connect_to_wss(protocol_proxy, user_id):
                 try:
                     while True:
                         if is_authenticated and not has_received_action:
-                            logger.info(f"UID: {truncate_userid(user_id)} | {node_type} | 已认证 | 等待PING门开启以获取 HTTP请求")
+                            logger.info(
+                                f"UID: {truncate_userid(user_id)} | {node_type} | 已认证 | 等待PING门开启以获取 HTTP请求"
+                            )
 
                         response = await websocket.recv()
                         message = json.loads(response)
-                        logger.info(f"UID: {truncate_userid(user_id)} | {node_type} | 接收到消息 | 数据: {message}")
+                        logger.info(
+                            f"UID: {truncate_userid(user_id)} | {node_type} | 接收到消息 | 数据: {message}"
+                        )
 
                         if message.get("action") == "AUTH":
                             auth_response = {
                                 "id": message["id"],
                                 "origin_action": "AUTH",
                                 "result": {
-                                    "browser_id": device_id,
-                                    "user_id": user_id,
-                                    "user_agent": random_user_agent,
-                                    "timestamp": int(time.time()),
-                                    "device_type": "extension",
-                                    "version": "4.26.2",
-                                    "extension_id": "lkbnfiajjmbhnfledhphioinpickokdi"
+                                    "browser_id":
+                                    device_id,
+                                    "user_id":
+                                    user_id,
+                                    "user_agent":
+                                    random_user_agent,
+                                    "timestamp":
+                                    int(time.time()),
+                                    "device_type":
+                                    "extension",
+                                    "version":
+                                    "4.26.2",
+                                    "extension_id":
+                                    "lkbnfiajjmbhnfledhphioinpickokdi"
                                 }
                             }
 
-                            logger.debug(f"UID: {truncate_userid(user_id)} | {node_type} | 发送AUTH | 数据: {auth_response}")
+                            logger.debug(
+                                f"UID: {truncate_userid(user_id)} | {node_type} | 发送AUTH | 数据: {auth_response}"
+                            )
                             await asyncio.sleep(DELAY_INTERVAL)
                             await websocket.send(json.dumps(auth_response))
-                            logger.success(f"UID: {truncate_userid(user_id)} | {node_type} | 已发送AUTH | 数据: {auth_response}")
+                            logger.success(
+                                f"UID: {truncate_userid(user_id)} | {node_type} | 已发送AUTH | 数据: {auth_response}"
+                            )
                             is_authenticated = True
 
-                        elif message.get("action") in ["HTTP_REQUEST", "OPEN_TUNNEL"]:
+                        elif message.get("action") in [
+                                "HTTP_REQUEST", "OPEN_TUNNEL"
+                        ]:
                             has_received_action = True
                             request_data = message["data"]
 
                             headers = {
                                 "User-Agent": custom_headers["User-Agent"],
-                                "Content-Type": "application/json; charset=utf-8"
+                                "Content-Type":
+                                "application/json; charset=utf-8"
                             }
 
                             async with aiohttp.ClientSession() as session:
-                                async with session.get(request_data["url"], headers=headers) as api_response:
+                                async with session.get(
+                                        request_data["url"],
+                                        headers=headers) as api_response:
                                     content = await api_response.text()
-                                    encoded_body = base64.b64encode(content.encode()).decode()
+                                    encoded_body = base64.b64encode(
+                                        content.encode()).decode()
 
-                                    status_text = HTTP_STATUS_CODES.get(api_response.status, "")
+                                    status_text = HTTP_STATUS_CODES.get(
+                                        api_response.status, "")
 
                                     http_response = {
                                         "id": message["id"],
@@ -248,70 +287,91 @@ async def connect_to_wss(protocol_proxy, user_id):
                                             "url": request_data["url"],
                                             "status": api_response.status,
                                             "status_text": status_text,
-                                            "headers": dict(api_response.headers),
+                                            "headers":
+                                            dict(api_response.headers),
                                             "body": encoded_body
                                         }
                                     }
 
-                                    logger.info(f"UID: {truncate_userid(user_id)} | {node_type} | 打开PING访问 | 数据: {http_response}")
+                                    logger.info(
+                                        f"UID: {truncate_userid(user_id)} | {node_type} | 打开PING访问 | 数据: {http_response}"
+                                    )
                                     await asyncio.sleep(DELAY_INTERVAL)
-                                    await websocket.send(json.dumps(http_response))
-                                    logger.success(f"UID: {truncate_userid(user_id)} | {node_type} | 已发送PING访问 | 数据: {http_response}")
+                                    await websocket.send(
+                                        json.dumps(http_response))
+                                    logger.success(
+                                        f"UID: {truncate_userid(user_id)} | {node_type} | 已发送PING访问 | 数据: {http_response}"
+                                    )
 
                         elif message.get("action") == "PONG":
-                            pong_response = {"id": message["id"], "origin_action": "PONG"}
-                            logger.debug(f"UID: {truncate_userid(user_id)} | {node_type} | 发送PONG | 数据: {pong_response}")
+                            pong_response = {
+                                "id": message["id"],
+                                "origin_action": "PONG"
+                            }
+                            logger.debug(
+                                f"UID: {truncate_userid(user_id)} | {node_type} | 发送PONG | 数据: {pong_response}"
+                            )
                             await asyncio.sleep(DELAY_INTERVAL)
                             await websocket.send(json.dumps(pong_response))
-                            logger.success(f"UID: {truncate_userid(user_id)} | {node_type} | 已发送PONG | 数据: {pong_response}")
+                            logger.success(
+                                f"UID: {truncate_userid(user_id)} | {node_type} | 已发送PONG | 数据: {pong_response}"
+                            )
 
                 except websockets.exceptions.ConnectionClosedError as e:
-                    logger.error(f"UID: {truncate_userid(user_id)} | {node_type} | 连接关闭错误 | 代理: {truncate_proxy(protocol_proxy)} | 错误: {str(e)} | 剩余代理数量: {total_proxies}")
+                    logger.error(
+                        f"UID: {truncate_userid(user_id)} | {node_type} | 连接关闭错误 | 代理: {truncate_proxy(protocol_proxy)} | 错误: {str(e)} | 剩余代理数量: {total_proxies}"
+                    )
                     await asyncio.sleep(DELAY_INTERVAL)
                 finally:
                     await websocket.close()
-                    logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | WebSocket连接已关闭 | 代理: {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}")
+                    logger.warning(
+                        f"UID: {truncate_userid(user_id)} | {node_type} | WebSocket连接已关闭 | 代理: {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}"
+                    )
                     send_ping_task.cancel()
                     await asyncio.sleep(DELAY_INTERVAL)
                     break
 
         except Exception as e:
-            logger.error(f"UID: {truncate_userid(user_id)} | {node_type} | 代理 {truncate_proxy(protocol_proxy)} 出现错误 ➜ {str(e)} | 剩余代理数量: {total_proxies}")
+            logger.error(
+                f"UID: {truncate_userid(user_id)} | {node_type} | 代理 {truncate_proxy(protocol_proxy)} 出现错误 ➜ {str(e)} | 剩余代理数量: {total_proxies}"
+            )
             error_conditions = [
-                "403 Forbidden",
-                "Host unreachable",
-                "Empty host component",
-                "Invalid scheme component",
-                "[SSL: WRONG_VERSION_NUMBER]",
+                "403 Forbidden", "Host unreachable", "Empty host component",
+                "Invalid scheme component", "[SSL: WRONG_VERSION_NUMBER]",
                 "invalid length of packed IP address string",
-                "Empty connect reply",
-                "Device creation limit exceeded",
+                "Empty connect reply", "Device creation limit exceeded",
                 "[Errno 111] Could not connect to proxy",
                 "sent 1011 (internal error) keepalive ping timeout; no close frame received"
             ]
             skip_proxy = [
                 "Proxy connection timed out: 60",
-                "407 Proxy Authentication Required",
-                "Invalid port component"
+                "407 Proxy Authentication Required", "Invalid port component"
             ]
 
             if any(error_msg in str(e) for error_msg in skip_proxy):
-                logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 由于错误跳过代理 ➜ {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}")
+                logger.warning(
+                    f"UID: {truncate_userid(user_id)} | {node_type} | 由于错误跳过代理 ➜ {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}"
+                )
                 return "skip"
 
             if remove_on_all_errors:
                 if any(error_msg in str(e) for error_msg in error_conditions):
-                    logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 由于错误移除代理 ➜ {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}")
+                    logger.warning(
+                        f"UID: {truncate_userid(user_id)} | {node_type} | 由于错误移除代理 ➜ {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}"
+                    )
                     remove_proxy_from_list(protocol_proxy)
                     return None
             else:
                 if "Device creation limit exceeded" in str(e):
-                    logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 由于错误移除代理 ➜ {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}")
+                    logger.warning(
+                        f"UID: {truncate_userid(user_id)} | {node_type} | 由于错误移除代理 ➜ {truncate_proxy(protocol_proxy)} | 剩余代理数量: {total_proxies}"
+                    )
                     remove_proxy_from_list(protocol_proxy)
                     return None
 
             await asyncio.sleep(DELAY_INTERVAL)
             continue
+
 
 async def main():
     with open(FILE_UID, 'r') as file:
@@ -326,14 +386,16 @@ async def main():
 
     random.shuffle(all_proxies)
     proxy_allocation = {
-        user_id: all_proxies[i * ONETIME_PROXY: (i + 1) * ONETIME_PROXY]
+        user_id: all_proxies[i * ONETIME_PROXY:(i + 1) * ONETIME_PROXY]
         for i, user_id in enumerate(user_ids)
     }
 
     retry_count = {}
 
     for user_id, proxies in proxy_allocation.items():
-        logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 使用的代理总数: {len(proxies)}")
+        logger.warning(
+            f"UID: {truncate_userid(user_id)} | {node_type} | 使用的代理总数: {len(proxies)}"
+        )
         await asyncio.sleep(DELAY_INTERVAL)
 
     tasks = {}
@@ -346,7 +408,8 @@ async def main():
             tasks[task] = (proxy, user_id)
 
     while True:
-        done, pending = await asyncio.wait(tasks.keys(), return_when=asyncio.FIRST_COMPLETED)
+        done, pending = await asyncio.wait(tasks.keys(),
+                                           return_when=asyncio.FIRST_COMPLETED)
 
         for task in done:
             try:
@@ -358,50 +421,76 @@ async def main():
                     retry_count[(failed_proxy, user_id)] += 1
 
                     if retry_count[(failed_proxy, user_id)] > MAX_RETRIES:
-                        logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 达到最大重试次数（跳过代理）: {truncate_proxy(failed_proxy)}。")
+                        logger.warning(
+                            f"UID: {truncate_userid(user_id)} | {node_type} | 达到最大重试次数（跳过代理）: {truncate_proxy(failed_proxy)}。"
+                        )
                         continue
 
-                    logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 跳过代理: {truncate_proxy(failed_proxy)}")
+                    logger.warning(
+                        f"UID: {truncate_userid(user_id)} | {node_type} | 跳过代理: {truncate_proxy(failed_proxy)}"
+                    )
 
-                    available_proxies = list(set(all_proxies) - set(proxy_allocation[user_id]))
+                    available_proxies = list(
+                        set(all_proxies) - set(proxy_allocation[user_id]))
                     if available_proxies:
                         new_proxy = random.choice(available_proxies)
                         proxy_allocation[user_id].append(new_proxy)
 
-                        retry_count[(new_proxy, user_id)] = retry_count[(failed_proxy, user_id)]
+                        retry_count[(new_proxy,
+                                     user_id)] = retry_count[(failed_proxy,
+                                                              user_id)]
                         await asyncio.sleep(DELAY_INTERVAL)
-                        new_task = asyncio.create_task(connect_to_wss(new_proxy, user_id))
+                        new_task = asyncio.create_task(
+                            connect_to_wss(new_proxy, user_id))
                         tasks[new_task] = (new_proxy, user_id)
-                        logger.success(f"UID: {truncate_userid(user_id)} | {node_type} | 替换跳过的代理 {truncate_proxy(failed_proxy)} 为 {truncate_proxy(new_proxy)}")
+                        logger.success(
+                            f"UID: {truncate_userid(user_id)} | {node_type} | 替换跳过的代理 {truncate_proxy(failed_proxy)} 为 {truncate_proxy(new_proxy)}"
+                        )
                     else:
-                        logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 没有可用的代理进行替换。")
+                        logger.warning(
+                            f"UID: {truncate_userid(user_id)} | {node_type} | 没有可用的代理进行替换。"
+                        )
 
                 elif result is None:
                     retry_count[(failed_proxy, user_id)] += 1
 
                     if retry_count[(failed_proxy, user_id)] > MAX_RETRIES:
-                        logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 达到最大重试次数（错误代理）: {truncate_proxy(failed_proxy)}。")
+                        logger.warning(
+                            f"UID: {truncate_userid(user_id)} | {node_type} | 达到最大重试次数（错误代理）: {truncate_proxy(failed_proxy)}。"
+                        )
                         proxy_allocation[user_id].remove(failed_proxy)
                         continue
 
-                    logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 移除并替换失败的代理: {truncate_proxy(failed_proxy)}")
+                    logger.warning(
+                        f"UID: {truncate_userid(user_id)} | {node_type} | 移除并替换失败的代理: {truncate_proxy(failed_proxy)}"
+                    )
                     proxy_allocation[user_id].remove(failed_proxy)
 
-                    available_proxies = list(set(all_proxies) - set(proxy_allocation[user_id]))
+                    available_proxies = list(
+                        set(all_proxies) - set(proxy_allocation[user_id]))
                     if available_proxies:
                         new_proxy = random.choice(available_proxies)
                         proxy_allocation[user_id].append(new_proxy)
 
-                        retry_count[(new_proxy, user_id)] = retry_count[(failed_proxy, user_id)]
+                        retry_count[(new_proxy,
+                                     user_id)] = retry_count[(failed_proxy,
+                                                              user_id)]
                         await asyncio.sleep(DELAY_INTERVAL)
-                        new_task = asyncio.create_task(connect_to_wss(new_proxy, user_id))
+                        new_task = asyncio.create_task(
+                            connect_to_wss(new_proxy, user_id))
                         tasks[new_task] = (new_proxy, user_id)
-                        logger.success(f"UID: {truncate_userid(user_id)} | {node_type} | 替换失败的代理: {truncate_proxy(failed_proxy)} 为: {truncate_proxy(new_proxy)}")
+                        logger.success(
+                            f"UID: {truncate_userid(user_id)} | {node_type} | 替换失败的代理: {truncate_proxy(failed_proxy)} 为: {truncate_proxy(new_proxy)}"
+                        )
                     else:
-                        logger.warning(f"UID: {truncate_userid(user_id)} | {node_type} | 没有可用的代理进行替换。")
+                        logger.warning(
+                            f"UID: {truncate_userid(user_id)} | {node_type} | 没有可用的代理进行替换。"
+                        )
 
             except Exception as e:
-                logger.error(f"UID: {truncate_userid(user_id)} | {node_type} | 处理任务时发生错误: {str(e)}")
+                logger.error(
+                    f"UID: {truncate_userid(user_id)} | {node_type} | 处理任务时发生错误: {str(e)}"
+                )
             finally:
                 tasks.pop(task)
 
@@ -411,6 +500,7 @@ async def main():
                 new_task = asyncio.create_task(connect_to_wss(proxy, user_id))
                 tasks[new_task] = (proxy, user_id)
 
+
 def remove_proxy_from_list(proxy):
     with open(FILE_PROXY, "r+") as file:
         lines = file.readlines()
@@ -419,6 +509,7 @@ def remove_proxy_from_list(proxy):
             if line.strip() != proxy:
                 file.write(line)
         file.truncate()
+
 
 if __name__ == '__main__':
     try:
