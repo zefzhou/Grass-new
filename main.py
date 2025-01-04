@@ -14,7 +14,7 @@ from loguru import logger
 import pyfiglet
 from websockets_proxy import Proxy, proxy_connect
 
-ONETIME_PROXY = 100
+ONETIME_PROXY = 3000
 DELAY_INTERVAL = 1
 MAX_RETRIES = 5
 FILE_UID = "uid.txt"
